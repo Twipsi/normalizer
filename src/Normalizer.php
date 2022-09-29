@@ -10,7 +10,7 @@ declare(strict_types=1);
 * file that was distributed with this source code.
 */
 
-namespace Core\Tools;
+namespace Twipsi\Normalizer;
 
 class Normalizer
 {
@@ -41,7 +41,7 @@ class Normalizer
     /**
      * Pattern to use when slugifying.
      */
-    protected const SLUG_PATTERN = "[^0-9a-zA-Z%s]+";
+    protected const SLUG_PATTERN = "/[^0-9a-zA-Z%s]+/";
 
     /**
      * Exception characters when slugifying,
@@ -50,73 +50,59 @@ class Normalizer
     protected const BREAKERS = '\\/_|+ -';
 
     /**
+     * Exception characters when slugifying a url,
+     * that should not be replaced.
+     */
+    protected const GUARDED = '\\/?&:=.';
+
+    /**
      * Normalize a string while just removing lines and spaces,
      * or normlaizing the encoding if set to strict.
      *
      * @param string $string
-     * @param bool $strict
+     * @param bool $transliterate
      *
      * @return string
      */
-    public static function cleanString(string $string, bool $strict = false): string
+    public static function normalizeString(string $string, bool $transliterate = false): string
     {
-        // Transliterate the string.
-        $string = $strict ? self::normalizeEncoding($string) : $string;
-
-        // Decode any possible html entities.
-        $string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
-
         // Strip all the html tags if any.
-        $string = trim(strip_tags($string));
+        $string = self::stripTags($string);
 
-        // Remove any tab spaces.
-        $string = preg_replace("/\t/", "", $string);
+        // Transliterate the string.
+        $string = $transliterate ? self::transliterate($string) : $string;
 
-        // Remove new lines and breaks.
-        return preg_replace("/\r?\n/", "", $string);
+        return self::stripLines($string);
     }
 
     /**
-     * Normalize a path or url.
+     * Slugify a path or uri.
      *
      * @param string $url
      *
      * @return string
      */
-    public static function normalizePath(string $url): string
+    public static function slugifyPath(string $uri, string $separator = '-'): string
     {
-        // Decode and strip and lower.
-        $url = strtolower(strip_tags(urldecode($url)));
+        // Decode, strip, lower and remove the right slash.
+        $uri = rtrim(strtolower(strip_tags(urldecode($uri))), '/');
 
-        // Normalize the slashes.
-        $url = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, trim($url));
+        // Do a basic clean of the string.
+        $uri = self::normalizeString(
+            str_replace(['\\'], '/', trim($uri)), true
+        );
 
-        // Remove the right slash and return decoded.
-        return self::cleanString(ltrim($url, DIRECTORY_SEPARATOR), true);
-    }
+        // Execute the pattern matching.
+        $uri = preg_replace(
+            sprintf(self::SLUG_PATTERN, self::GUARDED), "", strtolower($uri)
+        );
 
-    /**
-     * Normalize encoding to UTF8
-     *
-     * @param string $string
-     *
-     * @return string
-     */
-    public static function normalizeEncoding(string $string): string
-    {
-        return function_exists('transliterator_transliterate')
-          ? self::transliterate($string)
-          : preg_replace(array_keys(self::UTF8), array_values(self::UTF8), $string);
-    }
+        // Replace separators with seperator.
+        $uri = preg_replace(
+            sprintf("/[%s]+/", str_replace('\\/', '', self::BREAKERS)), $separator, $uri
+        );
 
-    /**
-     * Transliterate a string.
-     *
-     * @return string
-     */
-    public static function transliterate(string $string): string
-    {
-        return transliterator_transliterate("Hex-Any/Java", $string);
+        return trim($uri, $separator);
     }
 
     /**
@@ -129,10 +115,11 @@ class Normalizer
     public static function slugifyString(string $string, string $separator = '-'): string
     {
         // Do a basic clean of the string.
-        $string = self::cleanString(
+        $string = self::normalizeString($string, true);
 
-            // Execute the pattern matching.
-            preg_replace(sprintf(self::SLUG_PATTERN, self::BREAKERS), "", $string)
+        // Execute the pattern matching.
+        $string = preg_replace(
+            sprintf(self::SLUG_PATTERN, self::BREAKERS), "", strtolower($string)
         );
 
         // Replace separators with seperator.
@@ -140,4 +127,63 @@ class Normalizer
 
         return trim($string, $separator);
     }
+
+    /**
+     * Strip any lines or tabs on the string.
+     * 
+     * @param string $string
+     * 
+     * @return string
+     */
+    public static function stripLines(string $string): string
+    {
+        // Remove any tab spaces.
+        $string = preg_replace("/\t/", "", $string);
+
+        // Remove new lines and breaks.
+        return preg_replace("/\r?\n/", "", $string);
+    }
+
+    /**
+     * Decode and strip all html tags.
+     * 
+     * @param string $string
+     * 
+     * @return string
+     */
+    public static function stripTags(string $string): string
+    {
+        // Decode any possible html entities.
+        $string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
+
+        // Strip all the html tags if any.
+        return trim(strip_tags($string));
+    }
+
+    /**
+     * Normalize encoding to UTF8
+     *
+     * @param string $string
+     *
+     * @return string
+     */
+    public static function transliterate(string $string): string
+    {
+        return function_exists('transliterator_transliterate')
+          ? self::transliterateWithTransliterator($string)
+          : preg_replace(array_keys(self::UTF8), array_values(self::UTF8), $string);
+    }
+
+    /**
+     * Transliterate a string.
+     *
+     * @return string
+     */
+    protected static function transliterateWithTransliterator(string $string): string
+    {
+        return transliterator_transliterate(
+            'NFD; NFC; Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove;', $string
+        );
+    }
 }
+
