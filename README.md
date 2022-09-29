@@ -2,6 +2,9 @@
  A very simple class to normalize and slugify a string or url.
 
 ## Install
+```
+composer require twipsi/normalizer
+```
 
 ## Usage
 
@@ -25,7 +28,7 @@ Normalizer::normalizeString($string, true);
 Output: "Hello World"
 ```
 
-To slugify a string using default "\\/_|+ -" characters as separators.
+To slugify a string using default "\\/_|+ -" characters as separation identifiers.
 ```php
 $string = "H\\él/ló|W_ö+r l-d";
 
@@ -43,7 +46,7 @@ Normalizer::slugifyString($string, '_');
 Output: "h_el_lo_w_o_r_l_d"
 ```
 
-To slugify a string using default "_|+ -" characters as separators.
+To slugify a string using default "_|+ -" characters as separation identifiers.
 ```php
 $string = "https:://test.com/Tést page/Sep|ar_ate+Thís?örg=éáő";
 Normalizer::slugifyPath($string);
