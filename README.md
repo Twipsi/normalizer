@@ -46,19 +46,19 @@ Normalizer::slugifyString($string, '_');
 Output: "h_el_lo_w_o_r_l_d"
 ```
 
-To slugify a string using default "_|+ -" characters as separation identifiers.
+To slugify a url/path using default "_|+ -" characters as separation identifiers.
 ```php
-$string = "https:://test.com/Tést page/Sep|ar_ate+Thís?örg=éáő";
+$string = "https:://test.com/Tést page/Sep|ar_ate+Thís/?örg=éáő";
 Normalizer::slugifyPath($string);
 
-Output: "https:://test.com/test-page/sep-ar-ate-this?org=eao"
+Output: "https:://test.com/test-page/sep-ar-ate-this/?org=eao"
 ```
 
 You can also specify your own separator.
 ```php
-$string = "https:://test.com/Tést page/Sep|ar_ate+Thís?örg=éáő";
+$string = "https:://test.com/Tést page/Sep|ar_ate+Thís/?örg=éáő";
 
 Normalizer::slugifyPath($string, '_');
 
-Output: "https:://test.com/test_page/sep_ar_ate_this?org=eao"
+Output: "https:://test.com/test_page/sep_ar_ate_this/?org=eao"
 ```
