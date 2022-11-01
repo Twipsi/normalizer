@@ -57,11 +57,10 @@ class Normalizer
 
     /**
      * Normalize a string while just removing lines and spaces,
-     * or normlaizing the encoding if set to strict.
+     * or normalizing the encoding if set to strict.
      *
      * @param string $string
      * @param bool $transliterate
-     *
      * @return string
      */
     public static function normalizeString(string $string, bool $transliterate = false): string
@@ -78,8 +77,8 @@ class Normalizer
     /**
      * Slugify a path or uri.
      *
-     * @param string $url
-     *
+     * @param string $uri
+     * @param string $separator
      * @return string
      */
     public static function slugifyPath(string $uri, string $separator = '-'): string
@@ -109,7 +108,7 @@ class Normalizer
      * Slugify a string.
      *
      * @param string $string
-     *
+     * @param string $separator
      * @return string
      */
     public static function slugifyString(string $string, string $separator = '-'): string
@@ -129,10 +128,21 @@ class Normalizer
     }
 
     /**
+     * Slugify a string.
+     *
+     * @param string $string
+     * @param string $separator
+     * @return string
+     */
+    public static function slugify(string $string, string $separator = '-'): string
+    {
+        return static::slugifyString($string, $separator);
+    }
+
+    /**
      * Strip any lines or tabs on the string.
      * 
      * @param string $string
-     * 
      * @return string
      */
     public static function stripLines(string $string): string
@@ -148,7 +158,6 @@ class Normalizer
      * Decode and strip all html tags.
      * 
      * @param string $string
-     * 
      * @return string
      */
     public static function stripTags(string $string): string
@@ -164,7 +173,6 @@ class Normalizer
      * Normalize encoding to UTF8
      *
      * @param string $string
-     *
      * @return string
      */
     public static function transliterate(string $string): string
@@ -177,6 +185,7 @@ class Normalizer
     /**
      * Transliterate a string.
      *
+     * @param string $string
      * @return string
      */
     protected static function transliterateWithTransliterator(string $string): string
